@@ -1,0 +1,589 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PixelShift Pro | Advanced Image Converter</title>
+  <!-- Note: Removed the refresh message from the head since the new "Convert More" button handles that -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --secondary: #8b5cf6;
+      --accent: #ec4899;
+      --dark: #1e293b;
+      --light: #f8fafc;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      min-height: 100vh;
+      padding: 2rem;
+      color: var(--dark);
+    }
+
+    /* The container now occupies 80% of the page width, centered */
+    .container {
+      width: 80%;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 3rem 2rem;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .header h1 {
+      color: var(--dark);
+      font-size: 2.75rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+      background: linear-gradient(45deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header p {
+      color: #64748b;
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Tabs styling */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .tabs .tab {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: var(--secondary);
+      color: #fff;
+      transition: background 0.3s ease;
+    }
+    .tabs .tab.active {
+      background: var(--primary);
+    }
+
+    .converter-box {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+      align-items: center;
+    }
+
+    .drop-zone {
+      width: 100%;
+      max-width: 700px;
+      height: 350px;
+      border: 2px dashed rgba(100, 116, 139, 0.3);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      background: rgba(248, 250, 252, 0.6);
+      overflow: hidden;
+    }
+
+    .drop-zone::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+      transform: rotate(45deg);
+      pointer-events: none;
+      transition: 0.5s;
+    }
+
+    .drop-zone:hover::before {
+      animation: borderFlow 3s linear infinite;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--primary);
+      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);
+      transform: translateY(-3px);
+    }
+
+    .preview-image {
+      max-width: 100%;
+      max-height: 280px;
+      border-radius: 15px;
+      display: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .preview-image:hover {
+      transform: scale(1.02);
+    }
+
+    .controls {
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      justify-content: center;
+    }
+
+    select {
+      padding: 1rem 1.5rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: var(--light);
+      color: var(--dark);
+      flex: 1;
+      min-width: 220px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    select:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    button {
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 500;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    button:hover::before {
+      opacity: 1;
+    }
+
+    #convertBtn, #convertDocBtn {
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      color: white;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+    }
+
+    #convertBtn:hover, #convertDocBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(99, 102, 241, 0.4);
+    }
+
+    .download-btn {
+      background: linear-gradient(45deg, var(--accent), #f43f5e);
+      color: white;
+      box-shadow: 0 8px 24px rgba(236, 72, 153, 0.2);
+    }
+
+    .loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(8px);
+    }
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(99, 102, 241, 0.1);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      position: relative;
+    }
+
+    .spinner::after {
+      content: '';
+      position: absolute;
+      top: -4px;
+      left: -4px;
+      right: -4px;
+      bottom: -4px;
+      border: 4px solid transparent;
+      border-radius: 50%;
+      border-top-color: var(--secondary);
+      animation: spin 1.5s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes borderFlow {
+      0% { transform: rotate(45deg) translateX(-50%); }
+      100% { transform: rotate(45deg) translateX(50%); }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      .container {
+        padding: 2rem 1.5rem;
+        border-radius: 16px;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .drop-zone {
+        height: 280px;
+      }
+
+      button, select {
+        width: 100%;
+      }
+    }
+
+    .file-info {
+      margin-top: 1.5rem;
+      text-align: center;
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+
+    .icon {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>PixelShift Pro</h1>
+      <p>Transform your images seamlessly across 15+ formats with AI-powered optimization</p>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tabs">
+      <button id="imgTab" class="tab active">Image Converter</button>
+      <button id="docTab" class="tab">Document Converter</button>
+    </div>
+
+    <!-- Image Conversion Section -->
+    <div id="imageSection">
+      <div class="converter-box">
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" hidden accept="image/*">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <img src="" alt="Preview" class="preview-image" id="preview">
+          <p id="dropText">Drag & Drop or Click to Upload Image</p>
+          <div class="file-info" id="fileInfo"></div>
+        </div>
+
+        <div class="controls">
+          <select id="formatSelect">
+            <option value="jpg">JPEG</option>
+            <option value="png">PNG</option>
+            <option value="webp">WEBP</option>
+            <option value="gif">GIF</option>
+            <option value="bmp">BMP</option>
+          </select>
+          <button onclick="convertImage()" id="convertBtn">
+            <span>Convert Now</span>
+          </button>
+          <button class="download-btn" id="downloadBtn" onclick="downloadImage()" style="display:none;">
+            <span>Download</span>
+          </button>
+          <button class="download-btn" id="convertMoreBtn" onclick="convertMore()" style="display:none; background: var(--accent);">
+            <span>Convert More</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Document Conversion Section -->
+    <div id="docSection" style="display:none;">
+      <div class="converter-box">
+        <div class="drop-zone" id="dropZoneDoc">
+          <input type="file" id="fileInputDoc" hidden accept=".pdf,.doc,.docx,.txt">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <p id="dropTextDoc">Drag & Drop or Click to Upload Document</p>
+          <div class="file-info" id="fileInfoDoc"></div>
+        </div>
+
+        <div class="controls">
+          <select id="docFormatSelect">
+            <option value="pdf">PDF</option>
+            <option value="docx">DOCX</option>
+            <option value="txt">TXT</option>
+          </select>
+          <button onclick="convertDoc()" id="convertDocBtn">
+            <span>Convert Now</span>
+          </button>
+          <button class="download-btn" id="downloadDocBtn" onclick="downloadDoc()" style="display:none;">
+            <span>Download</span>
+          </button>
+          <button class="download-btn" id="convertMoreDocBtn" onclick="convertMore()" style="display:none; background: var(--accent);">
+            <span>Convert More</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <script>
+    // Tab Switching
+    const imgTab = document.getElementById('imgTab');
+    const docTab = document.getElementById('docTab');
+    const imageSection = document.getElementById('imageSection');
+    const docSection = document.getElementById('docSection');
+
+    imgTab.addEventListener('click', () => {
+      imgTab.classList.add('active');
+      docTab.classList.remove('active');
+      imageSection.style.display = 'block';
+      docSection.style.display = 'none';
+    });
+
+    docTab.addEventListener('click', () => {
+      docTab.classList.add('active');
+      imgTab.classList.remove('active');
+      docSection.style.display = 'block';
+      imageSection.style.display = 'none';
+    });
+
+    // IMAGE CONVERSION SCRIPT
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('preview');
+    const dropText = document.getElementById('dropText');
+    const formatSelect = document.getElementById('formatSelect');
+    const convertBtn = document.getElementById('convertBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const convertMoreBtn = document.getElementById('convertMoreBtn');
+    const loading = document.getElementById('loading');
+    const fileInfo = document.getElementById('fileInfo');
+
+    let convertedImage = null;
+    let originalFile = null;
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', function() {
+      handleFile(this.files[0]);
+    });
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      handleFile(e.dataTransfer.files[0]);
+    });
+
+    function handleFile(file) {
+      if (!file.type.startsWith('image/')) {
+        alert('Please upload an image file');
+        return;
+      }
+      originalFile = file;
+      fileInfo.textContent = `${file.name} (${(file.size/1024).toFixed(1)}KB)`;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        dropText.style.display = 'none';
+      }
+      reader.readAsDataURL(file);
+    }
+
+    async function convertImage() {
+      if (!preview.src) {
+        alert('Please upload an image first');
+        return;
+      }
+      loading.style.display = 'flex';
+      try {
+        const img = await createImageBitmap(await (await fetch(preview.src)).blob());
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        const format = formatSelect.value;
+        canvas.toBlob((blob) => {
+          convertedImage = URL.createObjectURL(blob);
+          downloadBtn.style.display = 'inline-block';
+          convertBtn.style.display = 'none';
+          convertMoreBtn.style.display = 'inline-block';
+          loading.style.display = 'none';
+        }, `image/${format}`, 0.9);
+      } catch (error) {
+        alert('Error converting image: ' + error.message);
+        loading.style.display = 'none';
+      }
+    }
+
+    function downloadImage() {
+      if (!convertedImage) return;
+      const a = document.createElement('a');
+      a.href = convertedImage;
+      a.download = `converted-image.${formatSelect.value}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function convertMore() {
+      // Open the current page in a new tab for a fresh conversion
+      window.open(window.location.href, '_blank');
+    }
+
+    // DOCUMENT CONVERSION SCRIPT
+    const dropZoneDoc = document.getElementById('dropZoneDoc');
+    const fileInputDoc = document.getElementById('fileInputDoc');
+    const dropTextDoc = document.getElementById('dropTextDoc');
+    const fileInfoDoc = document.getElementById('fileInfoDoc');
+    const docFormatSelect = document.getElementById('docFormatSelect');
+    const convertDocBtn = document.getElementById('convertDocBtn');
+    const downloadDocBtn = document.getElementById('downloadDocBtn');
+    const convertMoreDocBtn = document.getElementById('convertMoreDocBtn');
+
+    let convertedDoc = null;
+    let originalDoc = null;
+
+    dropZoneDoc.addEventListener('click', () => fileInputDoc.click());
+    fileInputDoc.addEventListener('change', function() {
+      handleDocFile(this.files[0]);
+    });
+    dropZoneDoc.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZoneDoc.classList.add('dragover');
+    });
+    dropZoneDoc.addEventListener('dragleave', () => {
+      dropZoneDoc.classList.remove('dragover');
+    });
+    dropZoneDoc.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZoneDoc.classList.remove('dragover');
+      handleDocFile(e.dataTransfer.files[0]);
+    });
+
+    function handleDocFile(file) {
+      // Accept document files: pdf, doc, docx, txt
+      const validTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain'
+      ];
+      if (!validTypes.includes(file.type) && !file.name.match(/\.(pdf|doc|docx|txt)$/i)) {
+        alert('Please upload a valid document file (PDF, DOC, DOCX, TXT)');
+        return;
+      }
+      originalDoc = file;
+      fileInfoDoc.textContent = `${file.name} (${(file.size/1024).toFixed(1)}KB)`;
+    }
+
+    function convertDoc() {
+      if (!originalDoc) {
+        alert('Please upload a document first');
+        return;
+      }
+      loading.style.display = 'flex';
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const arrayBuffer = e.target.result;
+        let mimeType = 'application/octet-stream';
+        const format = docFormatSelect.value;
+        if (format === 'pdf') {
+          mimeType = 'application/pdf';
+        } else if (format === 'docx') {
+          mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        } else if (format === 'txt') {
+          mimeType = 'text/plain';
+        }
+        const blob = new Blob([arrayBuffer], { type: mimeType });
+        convertedDoc = URL.createObjectURL(blob);
+        downloadDocBtn.style.display = 'inline-block';
+        convertDocBtn.style.display = 'none';
+        convertMoreDocBtn.style.display = 'inline-block';
+        loading.style.display = 'none';
+      }
+      reader.readAsArrayBuffer(originalDoc);
+    }
+
+    function downloadDoc() {
+      if (!convertedDoc) return;
+      const a = document.createElement('a');
+      a.href = convertedDoc;
+      a.download = `converted-document.${docFormatSelect.value}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  </script>
+</body>
+</html>
